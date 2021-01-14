@@ -19,8 +19,8 @@ def fetch_coordinates(apikey, place):
 
 
 def fetch_coffee_shop_data(coffee_shop, user_coordinates):
-    title = coffee_shop.get('Name')
-    coordinates = coffee_shop.get('geoData').get('coordinates')
+    title = coffee_shop['Name']
+    coordinates = coffee_shop['geoData']['coordinates']
     latitude, longitude = coordinates
     coffee_shop_distance = distance.distance((longitude, latitude), user_coordinates).km
     return {
@@ -36,9 +36,9 @@ def get_coffee_shop_distance(coffee_shop):
 
 
 def place_to_map(coffee_shops_map, coffee_shop):
-    latitude = coffee_shop.get('latitude')
-    longitude = coffee_shop.get('longitude')
-    title = coffee_shop.get('title')
+    latitude = coffee_shop['latitude']
+    longitude = coffee_shop['longitude']
+    title = coffee_shop['title']
     folium.Marker(
         location=[longitude, latitude],
         popup=title
@@ -55,6 +55,7 @@ def main():
     env = Env()
     env.read_env()
     coffee_shops_file = 'coffee.json'
+    coffee_shops_num = env.int('COFFEE_SHOPS_NUM')
     apikey = env('YANDEX_GEOCODER_API_KEY')
 
     place = input('Где вы находитесь? ')
@@ -63,7 +64,7 @@ def main():
     with open(coffee_shops_file, encoding='cp1251') as f:
         coffee_shops = [fetch_coffee_shop_data(coffee_shop, user_coordinates)
                         for coffee_shop in json.load(f)]
-    closest_coffee_shops = sorted(coffee_shops, key=get_coffee_shop_distance)[:5]
+    closest_coffee_shops = sorted(coffee_shops, key=get_coffee_shop_distance)[:coffee_shops_num]
     coffee_shops_map = folium.Map(location=user_coordinates, zoom_start=15)
 
     for coffee_shop in closest_coffee_shops:
@@ -72,7 +73,7 @@ def main():
 
     app = Flask(__name__)
     app.add_url_rule('/', 'map', open_map)
-    app.run()
+    app.run('0.0.0.0')
 
 
 if __name__ == '__main__':
